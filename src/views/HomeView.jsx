@@ -38,7 +38,7 @@ export default function HomeView() {
 
                         <div className="flex justify-center max-h-[200px]">
                             <img
-                                src="/logo.png"
+                                src="/logo.svg"
                                 alt="Logo"
                                 className="w-full object-cover object-center"
                             />

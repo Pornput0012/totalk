@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useSocketContext } from "../context/SocketContext";
 import { motion } from "motion/react";
 import Swal from "sweetalert2";
-
+ 
 export default function QuestionView() {
   const { currentMessage, nextQuestion, historyQ, questionLength, isHost } = useSocketContext();
   const [showTimer, setShowTimer] = useState(false);
@@ -55,7 +55,7 @@ export default function QuestionView() {
     <>
       <div className="flex justify-center max-h-[120px] mt-6">
         <img
-          src="/logo.png"
+          src="/logo.svg"
           alt="Logo"
           className="w-full object-contain object-center"
         />
