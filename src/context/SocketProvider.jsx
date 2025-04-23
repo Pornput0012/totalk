@@ -77,6 +77,11 @@ export default function SocketProvider({ children }) {
               setErrorMsg("");
             }, 5000);
             break;
+          case "disconnect":
+            setUserJoined(false)
+            console.log("Hello from Disconnect");
+            
+            break;
           default:
             break;
         }

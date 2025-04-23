@@ -67,7 +67,7 @@ export default function QuestionView() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        คำถามประจำวันนี้คือ...
+        คำถามคือ...
       </motion.h1>
       {(() => {
         const isCurrentTurn =
@@ -90,7 +90,7 @@ export default function QuestionView() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
       >
-        {currentMessage ? `${currentMessage}...` : "เริ่มกันเลย..!"}
+        {currentMessage ? `${currentMessage}...` : <span className="text-sm">Tip: ให้ตั้งใจฟังสิ่งที่คู่ของเราพูด <br />โดยที่ไม่ตัดสินหรือพูดแทรกขัดจังหวะกันเด็ดขาด</span>}
       </motion.p>
 
       {showTimer && (
@@ -113,13 +113,33 @@ export default function QuestionView() {
 
       <div className="space-y-4 mt-10 px-4">
         <motion.button
-          onClick={nextQuestion}
+          onClick={() => {
+            if (historyQ.length === questionLength - 1) {
+              Swal.fire({
+                title: "เยี่ยมมาก! 🎉",
+                text: "พวกคุณตอบครบทุกคำถามแล้ว ขอให้ความสัมพันธ์แน่นแฟ้นยิ่งขึ้นนะ 💖",
+                icon: "success",
+                confirmButtonText: "กลับสู่หน้าแรก",
+              }).then(() => {
+                window.location.href = "/";
+              });
+            } else {
+              nextQuestion();
+            }
+          }}
           className="btn text-white w-full bg-yellow-400 hover:bg-yellow-500 border-none"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          ไปยังคำถามถัดไป 🚀
+          {
+            historyQ.length === questionLength
+              ? "จบแล้วจร้า 🎉"
+              : historyQ.length === 0
+                ? "เริ่มกันเลย 💕"
+                : "ไปยังคำถามถัดไป 🚀"
+          }
         </motion.button>
+
 
         <div className="mt-4">
           <progress

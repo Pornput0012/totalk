@@ -19,6 +19,7 @@ export default function HomeView() {
         if (userJoined) {
             setshowQuestion(true)
         } else {
+
             setshowQuestion(false)
         }
     }, [userJoined])
