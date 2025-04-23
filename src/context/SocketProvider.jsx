@@ -20,7 +20,7 @@ export default function SocketProvider({ children }) {
       socketRef.current.readyState === WebSocket.CLOSED
     ) {
       socketRef.current = new WebSocket(
-        `ws://${import.meta.env.VITE_BACK_URL}`
+        import.meta.env.VITE_BACK_URL
       );
 
       socketRef.current.onopen = () => {
