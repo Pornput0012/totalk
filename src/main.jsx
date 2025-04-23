@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import QuestionView from "./views/QuestionView.jsx";
+import SocketProvider from "./context/SocketProvider.jsx";
 
 
 const router = createBrowserRouter([
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById('root')).render(
-  <RouterProvider router={router} />
-  ,
+  <SocketProvider>
+    <RouterProvider router={router} />
+  </SocketProvider>
 )
