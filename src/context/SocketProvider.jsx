@@ -13,18 +13,16 @@ export default function SocketProvider({ children }) {
   const [isHost, setIsHost] = useState(false);
   const [userJoined, setUserJoined] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [lastUser, setLastUser] = useState(false);
 
   useEffect(() => {
     if (
       !socketRef.current ||
       socketRef.current.readyState === WebSocket.CLOSED
     ) {
-      socketRef.current = new WebSocket(
-        import.meta.env.VITE_BACK_URL
-      );
+      socketRef.current = new WebSocket(import.meta.env.VITE_BACK_URL);
 
       socketRef.current.onopen = () => {
-        console.log("เชื่อมต่อสำเร็จ!");
         if (roomState !== 0) {
           const currentRoom = roomState;
           setTimeout(() => {
@@ -39,7 +37,6 @@ export default function SocketProvider({ children }) {
         const { type, room, msg, questionLength, number } = JSON.parse(
           res.data
         );
-        console.table({ type, room, msg, questionLength, number });
 
         switch (type) {
           case "created":
@@ -78,9 +75,7 @@ export default function SocketProvider({ children }) {
             }, 5000);
             break;
           case "disconnect":
-            setUserJoined(false)
-            console.log("Hello from Disconnect");
-            
+            setLastUser(true);
             break;
           default:
             break;
@@ -96,7 +91,6 @@ export default function SocketProvider({ children }) {
       };
 
       socketRef.current.onerror = () => {
-        console.log("เชื่อมต่อไม่สำเร็จ!");
       };
     }
 
@@ -161,7 +155,8 @@ export default function SocketProvider({ children }) {
         userJoined,
         errorMsg,
         historyQ,
-        questionLength
+        questionLength,
+        lastUser,
       }}
     >
       {children}
