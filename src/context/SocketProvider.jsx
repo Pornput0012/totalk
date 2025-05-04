@@ -14,6 +14,7 @@ export default function SocketProvider({ children }) {
   const [userJoined, setUserJoined] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [lastUser, setLastUser] = useState(false);
+  const [success, setSuccess] = useState(false)
 
   useEffect(() => {
     if (
@@ -34,7 +35,7 @@ export default function SocketProvider({ children }) {
       };
 
       socketRef.current.onmessage = (res) => {
-        const { type, room, msg, questionLength, number } = JSON.parse(
+        const { type, room, msg, questionLength, number, questionIndex } = JSON.parse(
           res.data
         );
 
@@ -44,6 +45,8 @@ export default function SocketProvider({ children }) {
             setQuestionLength(questionLength);
             setHistoryQ([]);
             setIsHost(true);
+            localStorage.setItem("room", room);
+
             break;
           case "joined":
             setRoomState(room);
@@ -51,6 +54,8 @@ export default function SocketProvider({ children }) {
             setHistoryQ([]);
             setIsHost(false);
             setUserJoined(true);
+            localStorage.setItem("room", room);
+
             break;
           case "userJoined":
             setUserJoined(true);
@@ -59,6 +64,10 @@ export default function SocketProvider({ children }) {
             setCurrentMessage(msg);
             setHistoryQ((prev) => [...prev, number]);
             break;
+          case "success":
+            console.log("success");
+
+            setSuccess(true)
           case "deleted":
             setRoomState(0);
             setCurrentMessage("");
@@ -77,16 +86,32 @@ export default function SocketProvider({ children }) {
           case "disconnect":
             setLastUser(true);
             break;
+          case "reconnected":
+            setRoomState(room);
+            setQuestionLength(questionLength);
+            setCurrentMessage(currentMessage);
+            setHistoryQ((prev) =>
+              Array.from({ length: questionIndex }, (_, i) => i)
+            );
+            break;
+
           default:
             break;
         }
       };
 
-      socketRef.current.onclose = (event) => {
-        if (event.code !== 1000) {
+      socketRef.current.onclose = () => {
+        console.log("Socket ถูกตัดการเชื่อมต่อ กำลัง reconnect...");
+
+        const savedRoom = localStorage.getItem("room");
+        if (savedRoom) {
           setTimeout(() => {
-            setNext((prev) => prev + 1);
-          }, 3000);
+            const reconnectMessage = {
+              type: "reconnect",
+              room: savedRoom,
+            };
+            socketRef.current.send(JSON.stringify(reconnectMessage));
+          }, 1000); 
         }
       };
 
@@ -104,8 +129,8 @@ export default function SocketProvider({ children }) {
     };
   }, []);
 
-  const createRoom = () => {
-    socketRef.current.send(JSON.stringify({ type: "create" }));
+  const createRoom = (questionIndex) => {
+    socketRef.current.send(JSON.stringify({ type: "create", questionIndex }));
   };
 
   const joinRoom = () => {
@@ -140,6 +165,10 @@ export default function SocketProvider({ children }) {
     setNext(random);
   };
 
+  const successQuestion = () => {
+    socketRef.current.send(JSON.stringify({ type: "success", room: roomState }));
+  }
+
   return (
     <SocketContext.Provider
       value={{
@@ -157,6 +186,8 @@ export default function SocketProvider({ children }) {
         historyQ,
         questionLength,
         lastUser,
+        successQuestion,
+        success
       }}
     >
       {children}

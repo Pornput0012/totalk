@@ -2,13 +2,25 @@ import { useEffect, useState, useRef } from "react";
 import { useSocketContext } from "../context/SocketContext";
 import { motion } from "motion/react";
 import Swal from "sweetalert2";
- 
+
 export default function QuestionView() {
-  const { currentMessage, nextQuestion, historyQ, questionLength, isHost } = useSocketContext();
+  const { currentMessage, nextQuestion, historyQ, questionLength, isHost, successQuestion, success } = useSocketContext();
   const [showTimer, setShowTimer] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(240);
   const [isRunning, setIsRunning] = useState(false);
   const timerRef = useRef(null);
+  const [isNextDisabled, setIsNextDisabled] = useState(false);
+
+  const handleNext = () => {
+    if (isNextDisabled) return;
+    setIsNextDisabled(true);
+    if (historyQ.length === questionLength - 1) {
+      successQuestion();
+    } else {
+      nextQuestion();
+    }
+    setTimeout(() => setIsNextDisabled(false), 1000); // ป้องกันกดรัว
+  };
 
   const progressPercent = questionLength > 0
     ? (historyQ.length / questionLength) * 100
@@ -39,6 +51,18 @@ export default function QuestionView() {
     }
     return () => clearTimeout(timerRef.current);
   }, [isRunning, secondsLeft]);
+  useEffect(() => {
+    if (success) {
+      Swal.fire({
+        title: "เยี่ยมมาก! 🎉",
+        text: "พวกคุณตอบครบทุกคำถามแล้ว ขอให้ความสัมพันธ์แน่นแฟ้นยิ่งขึ้นนะ 💖",
+        icon: "success",
+        confirmButtonText: "กลับสู่หน้าแรก",
+      }).then(() => {
+        window.location.href = "/";
+      });
+    }
+  }, [success])
 
   const startTimer = () => {
     setSecondsLeft(240);
@@ -71,7 +95,7 @@ export default function QuestionView() {
       </motion.h1>
       {(() => {
         const isCurrentTurn =
-          (historyQ.length % 2 === 0 && isHost) ||
+          (historyQ.length % 2 === 0 && isHost && historyQ.length !== 0) ||
           (historyQ.length % 2 === 1 && !isHost);
 
         return (
@@ -113,26 +137,13 @@ export default function QuestionView() {
 
       <div className="space-y-4 mt-10 px-4">
         <motion.button
-          onClick={() => {
-            if (historyQ.length === questionLength - 1) {
-              Swal.fire({
-                title: "เยี่ยมมาก! 🎉",
-                text: "พวกคุณตอบครบทุกคำถามแล้ว ขอให้ความสัมพันธ์แน่นแฟ้นยิ่งขึ้นนะ 💖",
-                icon: "success",
-                confirmButtonText: "กลับสู่หน้าแรก",
-              }).then(() => {
-                window.location.href = "/";
-              });
-            } else {
-              nextQuestion();
-            }
-          }}
+          onClick={handleNext}
           className="btn text-white w-full bg-yellow-400 hover:bg-yellow-500 border-none"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           {
-            historyQ.length === questionLength
+            historyQ.length >= questionLength
               ? "จบแล้วจร้า 🎉"
               : historyQ.length === 0
                 ? "เริ่มกันเลย 💕"

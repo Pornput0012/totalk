@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import QuestionView from "./QuestionView";
 import Swal from "sweetalert2";
-
 import { useSocketContext } from "../context/SocketContext";
+
 export default function HomeView() {
   const {
     room,
@@ -15,10 +15,17 @@ export default function HomeView() {
     lastUser,
   } = useSocketContext();
 
-  const [showQuestion, setshowQuestion] = useState(false);
+  const [showQuestion, setShowQuestion] = useState(false);
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(null);
+  const [questionOptions, _] = useState([
+    "เพิ่มความสนิทด้วย 36 คำถาม",
+    "คำถาม deeptalk กับเพื่อนสนิท",
+    "คำถามใช้ถามคนรัก เพื่อกระชับความสัมพันธ์",
+    "เปิดใจหนึ่งครึ่ง รักกันมากขึ้น!"])
+
   useEffect(() => {
     if (userJoined) {
-      setshowQuestion(true);
+      setShowQuestion(true);
     }
   }, [userJoined]);
 
@@ -29,12 +36,25 @@ export default function HomeView() {
         title: "คู่ของคุณหลุดการเชื่อมต่อ",
         text: "คุณจะถูกนำกลับไปยังหน้าแรก",
         confirmButtonText: "ตกลง",
-        confirmButtonColor: "#facc15", // สีเหลือง
+        confirmButtonColor: "#facc15",
       }).then(() => {
         window.location.href = "/";
       });
     }
   }, [lastUser]);
+
+  const handleCreateRoomFlow = () => {
+    // เปิด modal ให้เลือกคำถาม
+    document.getElementById("selectQuestion").showModal();
+  };
+
+  const confirmCreateRoom = () => {
+    if (selectedQuestionIndex !== null) {
+      createRoom(selectedQuestionIndex);
+      document.getElementById("selectQuestion").close();
+      document.getElementById("roomNumber").showModal();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50/50 to-white flex items-center justify-center p-4">
@@ -59,15 +79,69 @@ export default function HomeView() {
             </div>
 
             <div className="space-y-4 mt-10">
+              {/* กดปุ่มสร้างห้อง */}
               <button
-                onClick={() => {
-                  createRoom();
-                  document.getElementById("roomNumber").showModal();
-                }}
+                onClick={handleCreateRoomFlow}
                 className="btn text-white w-full bg-yellow-400 hover:bg-yellow-500 border-none"
               >
                 สร้างห้อง
               </button>
+
+              {/* Modal เลือกคำถาม */}
+              <dialog
+                id="selectQuestion"
+                className="modal"
+                onClick={(e) => {
+                  const dialog = document.getElementById("selectQuestion");
+                  if (e.target === dialog) dialog.close();
+                }}
+              >
+                <div
+                  className="modal-box text-center"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="font-bold text-xl mb-4">เลือกชุดคำถาม</h3>
+
+                  <select
+                    value={selectedQuestionIndex ?? ""}
+                    onChange={(e) =>
+                      setSelectedQuestionIndex(
+                        e.target.value === "" ? null : Number(e.target.value)
+                      )
+                    }
+                    className="select select-bordered w-full md:w-3/4 text-sm"
+                  >
+                    <option value="">-- กรุณาเลือกชุดคำถาม --</option>
+                    {questionOptions.map((ele, index) => (
+                      <option key={index} value={index}>
+                        {ele}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="my-6 md:my-8 lg:my-10 text-lg md:text-xl lg:text-2xl font-semibold">
+                    {questionOptions[selectedQuestionIndex]}
+                  </div>
+
+                  <div className="modal-action mt-6">
+                    <form method="dialog" className="w-full md:w-3/4 mx-auto flex flex-col gap-2">
+                      <button
+                        type="button"
+                        disabled={selectedQuestionIndex === null}
+                        onClick={confirmCreateRoom}
+                        className="btn bg-yellow-500 text-white disabled:opacity-50"
+                      >
+                        ยืนยันสร้างห้อง
+                      </button>
+                      <button className="btn bg-gray-200">ยกเลิก</button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
+
+
+
+              {/* Modal แสดงเลขห้อง */}
               <dialog
                 id="roomNumber"
                 className="modal"
@@ -81,7 +155,7 @@ export default function HomeView() {
               >
                 <div
                   className="modal-box text-center"
-                  onClick={(e) => e.stopPropagation()} // กันไม่ให้คลิกภายในปิด modal
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="font-bold text-xl mb-4">ห้องของคุณ</h3>
                   <p className="text-4xl font-mono tracking-widest bg-white rounded-lg px-8 py-2 inline-block">
@@ -102,6 +176,8 @@ export default function HomeView() {
                   </div>
                 </div>
               </dialog>
+
+              {/* ปุ่มเข้าร่วมห้อง */}
               <button
                 onClick={() => {
                   document.getElementById("joinRoom").showModal();
@@ -110,6 +186,8 @@ export default function HomeView() {
               >
                 เข้าร่วมห้อง
               </button>
+
+              {/* Modal เข้าร่วมห้อง */}
               <dialog
                 id="joinRoom"
                 className="modal"
@@ -123,7 +201,7 @@ export default function HomeView() {
               >
                 <div
                   className="modal-box text-center"
-                  onClick={(e) => e.stopPropagation()} // กันไม่ให้คลิกภายในปิด modal
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <h3 className="font-bold text-xl mb-4">ใส่เลขห้อง</h3>
                   <input
@@ -134,9 +212,8 @@ export default function HomeView() {
                       }
                     }}
                     value={roomInput == 0 ? "" : roomInput}
-                    className="text-3xl py-2 font-mono  tracking-widest bg-white rounded-lg inline-block w-64 text-center"
+                    className="text-3xl py-2 font-mono tracking-widest bg-white rounded-lg inline-block w-64 text-center"
                     maxLength={6}
-                    pattern="[0-9]"
                     type="text"
                     placeholder="xxxxxx"
                   />
