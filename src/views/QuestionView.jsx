@@ -9,17 +9,13 @@ export default function QuestionView() {
   const [secondsLeft, setSecondsLeft] = useState(240);
   const [isRunning, setIsRunning] = useState(false);
   const timerRef = useRef(null);
-  const [isNextDisabled, setIsNextDisabled] = useState(false);
 
   const handleNext = () => {
-    if (isNextDisabled) return;
-    setIsNextDisabled(true);
     if (historyQ.length === questionLength - 1) {
       successQuestion();
     } else {
       nextQuestion();
     }
-    setTimeout(() => setIsNextDisabled(false), 1000); // ป้องกันกดรัว
   };
 
   const progressPercent = questionLength > 0
