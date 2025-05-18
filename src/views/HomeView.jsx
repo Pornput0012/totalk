@@ -21,7 +21,8 @@ export default function HomeView() {
     "เพิ่มความสนิทด้วย 36 คำถาม",
     "คำถาม deeptalk กับเพื่อนสนิท",
     "คำถามใช้ถามคนรัก เพื่อกระชับความสัมพันธ์",
-    "เปิดใจหนึ่งครึ่ง รักกันมากขึ้น!"])
+    "เปิดใจหนึ่งครึ่ง รักกันมากขึ้น!",
+    "คำถาม deeptalk กับคนคุย"])
 
   useEffect(() => {
     if (userJoined) {
@@ -60,7 +61,7 @@ export default function HomeView() {
     <div className="min-h-screen bg-gradient-to-b from-yellow-50/50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-6 space-y-6">
         {showQuestion ? (
-          <QuestionView />
+          <QuestionView room={room} />
         ) : (
           <>
             <h1 className="text-2xl md:text-3xl font-bold text-center text-yellow-500">
@@ -159,7 +160,7 @@ export default function HomeView() {
                 >
                   <h3 className="font-bold text-xl mb-4">ห้องของคุณ</h3>
                   <p className="text-4xl font-mono tracking-widest bg-white rounded-lg px-8 py-2 inline-block">
-                    {room}
+                    {room != -1 ? room : ". . . . . ."}
                   </p>
                   <p className="mt-4 text-sm text-gray-500">
                     แชร์เลขห้องให้เพื่อน join เลย!

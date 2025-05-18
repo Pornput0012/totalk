@@ -1,3 +1,4 @@
+
 // src/context/SocketProvider.js
 import { useEffect, useRef, useState } from "react";
 import { SocketContext } from "./SocketContext";
@@ -9,8 +10,9 @@ export default function SocketProvider({ children }) {
   const [_, setNext] = useState(0);
   const [currentMessage, setCurrentMessage] = useState("");
   const [questionLength, setQuestionLength] = useState(0);
-  const [historyQ, setHistoryQ] = useState([]);
+  const [historyQ, setHistoryQ] = useState([]); // เก็บประวัติเลขคำถามที่ถูกถามแล้ว
   const [isHost, setIsHost] = useState(false);
+  const [isBeing, setIsBeing] = useState(false);
   const [userJoined, setUserJoined] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [lastUser, setLastUser] = useState(false);
@@ -35,9 +37,13 @@ export default function SocketProvider({ children }) {
       };
 
       socketRef.current.onmessage = (res) => {
-        const { type, room, msg, questionLength, number, questionIndex } = JSON.parse(
+        const { type, room, msg, questionLength, number, questionIndex, noUser, history, lastQuestion, isBeing } = JSON.parse(
           res.data
         );
+        console.log(JSON.parse(
+          res.data
+        ));
+
 
         switch (type) {
           case "created":
@@ -51,7 +57,16 @@ export default function SocketProvider({ children }) {
           case "joined":
             setRoomState(room);
             setQuestionLength(questionLength);
-            setHistoryQ([]);
+            // Update history from server if available
+            if (history && Array.isArray(history)) {
+              setHistoryQ(history);
+            } else {
+              setHistoryQ([]);
+            }
+            // Set current message if lastQuestion is available
+            if (lastQuestion !== undefined) {
+              setCurrentMessage(lastQuestion);
+            }
             setIsHost(false);
             setUserJoined(true);
             localStorage.setItem("room", room);
@@ -61,6 +76,7 @@ export default function SocketProvider({ children }) {
             setUserJoined(true);
             break;
           case "message":
+            setIsBeing(isBeing)
             setCurrentMessage(msg);
             setHistoryQ((prev) => [...prev, number]);
             break;
@@ -74,6 +90,7 @@ export default function SocketProvider({ children }) {
             setQuestionLength(0);
             setHistoryQ([]);
             setIsHost(false);
+            setIsBeing(false)
             setUserJoined(false);
             setErrorMsg("");
             break;
@@ -84,15 +101,22 @@ export default function SocketProvider({ children }) {
             }, 5000);
             break;
           case "disconnect":
-            setLastUser(true);
+            if (noUser == 0) {
+              setLastUser(true);
+            }
             break;
           case "reconnected":
             setRoomState(room);
             setQuestionLength(questionLength);
             setCurrentMessage(currentMessage);
-            setHistoryQ((prev) =>
-              Array.from({ length: questionIndex }, (_, i) => i)
-            );
+            // รับประวัติคำถามเมื่อ reconnect ถ้ามี
+            if (history && Array.isArray(history)) {
+              setHistoryQ(history);
+            } else {
+              setHistoryQ((prev) =>
+                Array.from({ length: questionIndex }, (_, i) => i)
+              );
+            }
             break;
 
           default:
@@ -111,7 +135,7 @@ export default function SocketProvider({ children }) {
               room: savedRoom,
             };
             socketRef.current.send(JSON.stringify(reconnectMessage));
-          }, 1000); 
+          }, 1000);
         }
       };
 
@@ -177,6 +201,7 @@ export default function SocketProvider({ children }) {
         setRoomInput,
         currentMessage,
         isHost,
+        isBeing,
         createRoom,
         joinRoom,
         deleteRoom,

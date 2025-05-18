@@ -3,8 +3,8 @@ import { useSocketContext } from "../context/SocketContext";
 import { motion } from "motion/react";
 import Swal from "sweetalert2";
 
-export default function QuestionView() {
-  const { currentMessage, nextQuestion, historyQ, questionLength, isHost, successQuestion, success } = useSocketContext();
+export default function QuestionView({ room }) {
+  const { currentMessage, nextQuestion, historyQ, questionLength, isBeing, successQuestion, success } = useSocketContext();
   const [showTimer, setShowTimer] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(240);
   const [isRunning, setIsRunning] = useState(false);
@@ -23,7 +23,8 @@ export default function QuestionView() {
     : 0;
 
   useEffect(() => {
-    if (currentMessage.includes("ใช้เวลา 4 นาที")) {
+    if (currentMessage.includes(" 4 นาที")) {
+      setSecondsLeft(240)
       setShowTimer(true);
     } else {
       setShowTimer(false);
@@ -89,20 +90,11 @@ export default function QuestionView() {
       >
         คำถามคือ...
       </motion.h1>
-      {(() => {
-        const isCurrentTurn =
-          (historyQ.length % 2 === 0 && isHost && historyQ.length !== 0) ||
-          (historyQ.length % 2 === 1 && !isHost);
-
-        return (
-          <p className={`text-center font-medium mt-2 ${isCurrentTurn ? "text-green-600" : "text-blue-600"
-            }`}>
-            {isCurrentTurn
-              ? "ถึงตาคุณตอบแล้ว 🎯"
-              : ""}
-          </p>
-        );
-      })()}
+      {
+        <p className={`text-center font-medium mt-2 ${isBeing && "text-green-600"}`}>
+          {isBeing && "คุณเป็นคนได้เริ่มตอบก่อน 🎯"}
+        </p>
+      }
 
       <motion.p
         className="text-center text-gray-600 min-h-[120px] md:min-h-[80px] flex justify-center items-center text-lg"
@@ -157,7 +149,9 @@ export default function QuestionView() {
           <div className="text-center text-sm text-gray-600 mt-1">
             ตอบแล้ว {historyQ.length} / {questionLength} ข้อ ✨
           </div>
+          <p className="text-center text-xs ">ห้อง :  <span className="-tracking-tighter">{room}</span></p>
         </div>
+
       </div>
     </>
   );
