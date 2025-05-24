@@ -17,12 +17,26 @@ export default function HomeView() {
 
   const [showQuestion, setShowQuestion] = useState(false);
   const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(null);
-  const [questionOptions, _] = useState([
+  const [isRedZone, setIsRedZone] = useState(false);
+
+  const [questionOptions] = useState([
     "เพิ่มความสนิทด้วย 36 คำถาม",
     "คำถาม deeptalk กับเพื่อนสนิท",
     "คำถามใช้ถามคนรัก เพื่อกระชับความสัมพันธ์",
     "เปิดใจหนึ่งครึ่ง รักกันมากขึ้น!",
-    "คำถาม deeptalk กับคนคุย"])
+    "คำถาม deeptalk กับคนคุย",
+    "ถามจริงตอบจริง"
+  ]);
+
+  const [questionOptionsRedZone] = useState([
+    "คำถามสนุกสุดแซ่บสำหรับคู่รัก",
+    "คำถามเร่าร้อนจุดไฟรัก",
+    "ถามจริงตอบจริงสุดแซ่บ",
+    "คำถามรู้ใจคู่รัก",
+    "คำถามเผยสิ่งที่ทำให้หลงรัก",
+    "คำถามเคยทำรักสุดมัน",
+    "คำถามแซ่บสำหรับเพื่อน",
+  ]);
 
   useEffect(() => {
     if (userJoined) {
@@ -45,17 +59,18 @@ export default function HomeView() {
   }, [lastUser]);
 
   const handleCreateRoomFlow = () => {
-    // เปิด modal ให้เลือกคำถาม
     document.getElementById("selectQuestion").showModal();
   };
 
   const confirmCreateRoom = () => {
     if (selectedQuestionIndex !== null) {
-      createRoom(selectedQuestionIndex);
+      createRoom(selectedQuestionIndex, isRedZone);
       document.getElementById("selectQuestion").close();
       document.getElementById("roomNumber").showModal();
     }
   };
+
+  const currentQuestionOptions = isRedZone ? questionOptionsRedZone : questionOptions;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-yellow-50/50 to-white flex items-center justify-center p-4">
@@ -80,7 +95,6 @@ export default function HomeView() {
             </div>
 
             <div className="space-y-4 mt-10">
-              {/* กดปุ่มสร้างห้อง */}
               <button
                 onClick={handleCreateRoomFlow}
                 className="btn text-white w-full bg-yellow-400 hover:bg-yellow-500 border-none"
@@ -88,7 +102,6 @@ export default function HomeView() {
                 สร้างห้อง
               </button>
 
-              {/* Modal เลือกคำถาม */}
               <dialog
                 id="selectQuestion"
                 className="modal"
@@ -103,6 +116,43 @@ export default function HomeView() {
                 >
                   <h3 className="font-bold text-xl mb-4">เลือกชุดคำถาม</h3>
 
+                  <div className="flex justify-center mb-4 items-start gap-2 mt-4 mx-auto">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="questionType"
+                        id="normalQuestion"
+                        className="radio radio-warning"
+                        checked={!isRedZone}
+                        onChange={() => {
+                          setIsRedZone(false);
+                          setSelectedQuestionIndex(null);
+                        }}
+                      />
+                      <label htmlFor="normalQuestion" className="text-sm font-medium text-gray-700">
+                        คำถามทั่วไป
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="questionType"
+                        id="redZoneQuestion"
+                        className="radio radio-error"
+                        checked={isRedZone}
+                        onChange={() => {
+                          setIsRedZone(true);
+                          setSelectedQuestionIndex(null);
+                        }}
+                      />
+                      <label htmlFor="redZoneQuestion" className="text-sm font-medium text-red-500">
+                        คำถามเสวเสว
+                      </label>
+                    </div>
+                  </div>
+
+
                   <select
                     value={selectedQuestionIndex ?? ""}
                     onChange={(e) =>
@@ -113,7 +163,7 @@ export default function HomeView() {
                     className="select select-bordered w-full md:w-3/4 text-sm"
                   >
                     <option value="">-- กรุณาเลือกชุดคำถาม --</option>
-                    {questionOptions.map((ele, index) => (
+                    {currentQuestionOptions.map((ele, index) => (
                       <option key={index} value={index}>
                         {ele}
                       </option>
@@ -121,7 +171,7 @@ export default function HomeView() {
                   </select>
 
                   <div className="my-6 md:my-8 lg:my-10 text-lg md:text-xl lg:text-2xl font-semibold">
-                    {questionOptions[selectedQuestionIndex]}
+                    {selectedQuestionIndex !== null && currentQuestionOptions[selectedQuestionIndex]}
                   </div>
 
                   <div className="modal-action mt-6">
@@ -140,45 +190,29 @@ export default function HomeView() {
                 </div>
               </dialog>
 
-
-
-              {/* Modal แสดงเลขห้อง */}
               <dialog
                 id="roomNumber"
                 className="modal"
                 onClick={(e) => {
                   const dialog = document.getElementById("roomNumber");
-                  if (e.target === dialog) {
-                    deleteRoom();
-                    dialog.close();
-                  }
+                  if (e.target === dialog) dialog.close();
                 }}
               >
                 <div
                   className="modal-box text-center"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <h3 className="font-bold text-xl mb-4">ห้องของคุณ</h3>
-                  <p className="text-4xl font-mono tracking-widest bg-white rounded-lg px-8 py-2 inline-block">
-                    {room != -1 ? room : ". . . . . ."}
-                  </p>
-                  <p className="mt-4 text-sm text-gray-500">
-                    แชร์เลขห้องให้เพื่อน join เลย!
-                  </p>
-                  <div className="modal-action mt-6">
+                  <h3 className="font-bold text-lg text-yellow-500">เลขห้อง</h3>
+                  <p className="py-4 text-3xl font-semibold tracking-widest">{room == -1 ? "......" : room}</p>
+                  <div className="modal-action flex justify-center">
                     <form method="dialog">
-                      <button
-                        onClick={deleteRoom}
-                        className="btn border-yellow-400 bg-yellow-500"
-                      >
-                        ปิด
+                      <button className="btn bg-yellow-400 text-white">
+                        ตกลง
                       </button>
                     </form>
                   </div>
                 </div>
               </dialog>
-
-              {/* ปุ่มเข้าร่วมห้อง */}
               <button
                 onClick={() => {
                   document.getElementById("joinRoom").showModal();

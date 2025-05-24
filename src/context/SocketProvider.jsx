@@ -153,8 +153,8 @@ export default function SocketProvider({ children }) {
     };
   }, []);
 
-  const createRoom = (questionIndex) => {
-    socketRef.current.send(JSON.stringify({ type: "create", questionIndex }));
+  const createRoom = (questionIndex, isRedzone) => {
+    socketRef.current.send(JSON.stringify({ type: "create", questionIndex, isRedzone }));
   };
 
   const joinRoom = () => {
